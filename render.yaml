@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: empiris-hotel-bot-ai
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_TOKEN
+        value: change-me-to-a-random-secret
