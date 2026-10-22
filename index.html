@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Empiris Guest House – Reservations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1f2933; --muted: #6b7280; --accent: #b91c1c; --accent-dark: #991b1b;
+    --card: rgba(255, 255, 255, 0.92); --line: #e5e7eb; --bg-start: #0f172a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color: var(--ink);
+    background: radial-gradient(circle at 50% 0%, #3b1212 0%, #0f172a 60%, #020617 100%);
+    overflow-x: hidden;
+  }
+
+  /* ---------- decorative ambient blobs ---------- */
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    overflow: hidden;
+  }
+  .blob {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: .35; animation: float 14s ease-in-out infinite;
+  }
+  .b1 { top: -10%; left: -10%; width: 60vw; height: 60vw; background: #b91c1c; animation-delay: 0s; }
+  .b2 { bottom: -10%; right: -10%; width: 55vw; height: 55vw; background: #1e3c72; animation-delay: -5s; }
+  .b3 { top: 30%; left: 40%; width: 40vw; height: 40vw; background: #7c3aed; animation-delay: -10s; }
+  @keyframes float { 0%, 100% { transform: translate(0,0) scale(1); } 50% { transform: translate(20px, -30px) scale(1.05); } }
+
+  /* ---------- start screen ---------- */
+  .start-screen {
+    position: relative; z-index: 10; height: 100dvh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 24px;
+    background: linear-gradient(to bottom, rgba(2,6,23,0.4), rgba(2,6,23,0.7));
+  }
+  .logo-wrap { margin-bottom: 24px; }
+  .logo {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, #b91c1c, #991b1b);
+    display: grid; place-items: center; box-shadow: 0 20px 60px rgba(185, 28, 28, 0.45);
+    margin: 0 auto 16px; border: 4px solid rgba(255,255,255,0.25);
+  }
+  .logo svg { width: 64px; height: 64px; fill: #fff; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+  .start-screen h1 {
+    font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700;
+    color: #fff; letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .start-screen p {
+    color: #e2e8f0; font-size: 1.15rem; font-weight: 400; margin-bottom: 34px; opacity: .95;
+  }
+  #startBtn {
+    font-family: 'Inter', sans-serif; font-size: 1.1rem; font-weight: 600;
+    color: #fff; background: linear-gradient(135deg, #b91c1c, #991b1b);
+    border: none; border-radius: 14px; padding: 14px 40px; cursor: pointer;
+    box-shadow: 0 12px 30px rgba(185, 28, 28, 0.4); transition: all .25s ease; letter-spacing: 0.02em;
+  }
+  #startBtn:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(185, 28, 28, 0.55); filter: brightness(1.1); }
+  #startBtn:active { transform: translateY(0); }
+
+  /* ---------- chat screen ---------- */
+  .chat-screen {
+    position: relative; z-index: 10; width: 100%; max-width: 520px;
+    margin: 40px auto 24px; background: var(--card); border-radius: 22px;
+    overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 25px 80px rgba(0,0,0,.35); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .chat-header {
+    background: linear-gradient(135deg, #b91c1c, #991b1b); color: #fff; padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .chat-logo { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.2); display: grid; place-items: center; }
+  .chat-logo svg { width: 20px; height: 20px; fill: #fff; }
+  .chat-header h1 { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+  .chat-header small { opacity: .9; display: block; font-size: .75rem; margin-top: 1px; }
+  .back-btn {
+    background: rgba(255,255,255,0.15); color: #fff; border: 0; border-radius: 10px;
+    width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer;
+    transition: background .2s;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+  #log { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #f8fafc; }
+  .msg { max-width: 82%; padding: 10px 14px; border-radius: 16px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; font-size: .95rem; }
+  .msg.bot { background: #ffffff; border: 1px solid var(--line); border-bottom-left-radius: 4px; align-self: flex-start; color: var(--ink); }
+  .msg.user { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+  .typing { display: inline-flex; gap: 5px; padding: 16px; align-self: flex-start; }
+  .typing i { width: 7px; height: 7px; background: var(--muted); border-radius: 50%; animation: b 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes b { 0%, 60%, 100% { transform: translateY(0); opacity: .4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+  #chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 20px 2px; background: #f1f5f9; }
+  #chips button {
+    border: 1px solid var(--line); background: #fff; color: var(--accent-dark);
+    border-radius: 999px; padding: 6px 12px; font-size: .82rem; cursor: pointer;
+    font-weight: 500; transition: all .2s;
+  }
+  #chips button:hover { background: #fef2f2; border-color: var(--accent); }
+
+  form { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: #fff; }
+  #msg {
+    flex: 1; border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px;
+    font-size: 1rem; outline: none; background: #fff; color: var(--ink);
+  }
+  #msg:focus { border-color: var(--accent); }
+  #send {
+    background: var(--accent); color: #fff; border: 0; border-radius: 14px;
+    padding: 0 22px; font-size: .95rem; font-weight: 600; cursor: pointer;
+    transition: all .2s;
+  }
+  #send:hover { background: var(--accent-dark); }
+  #send:disabled { opacity: .6; cursor: default; }
+
+  /* ---------- footer ---------- */
+  .site-footer {
+    width: 100%; max-width: 900px; margin: 0 auto 40px; padding: 26px 18px 12px;
+    text-align: center; color: #fff; opacity: .95;
+  }
+  .site-footer img {
+    width: 100%; max-width: 720px; height: auto; border-radius: 18px;
+    box-shadow: 0 20px 40px rgba(0,0,0,.35); display: block; margin: 0 auto 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .footer-note { margin: 0; font-size: .9rem; line-height: 1.5; font-weight: 400; }
+
+  .hidden { display: none !important; }
+  .fade-in { animation: fadeIn .45s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 560px) { .chat-screen { margin: 20px 16px 24px; border-radius: 0; } }
+</style>
+</head>
+<body>
+
+  <div class="ambient">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+
+  <!-- start conversation section -->
+  <section id="start" class="start-screen fade-in">
+    <div class="logo-wrap">
+      <div class="logo" aria-label="Empiris Guest House icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L3 7l1 5 4-1.5 4 1.5 1-5zM9 12l1 2.22 4 2.5 4-2.5L15 12z"/>
+          <path d="M12 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="#fbbf24"/>
+        </svg>
+      </div>
+    </div>
+    <h1>Empiris Guest House</h1>
+    <p>Narok County, Kenya · Authentic Maasai hospitality · Room reservations &amp; questions</p>
+    <button id="startBtn" type="button">Start Conversation</button>
+  </section>
+
+  <!-- chat section (revealed after start) -->
+  <section id="chat" class="chat-screen hidden fade-in">
+    <div class="chat-header">
+      <div class="chat-logo" aria-label="Empiris Guest House icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L3 7l1 5 4-1.5 4 1.5 1-5zM9 12l1 2.22 4 2.5 4-2.5L15 12z"/>
+          <path d="M12 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" fill="#fbbf24"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Reservations</h1>
+        <small>Chat with our assistant</small>
+      </div>
+      <button id="backBtn" class="back-btn" type="button" aria-label="Back">←</button>
+    </div>
+    <div id="log" aria-live="polite"></div>
+    <div id="chips"></div>
+    <form id="form" autocomplete="off">
+      <input id="msg" type="text" placeholder="Type a message…" maxlength="500" aria-label="Message">
+      <button id="send" type="submit">Send</button>
+    </form>
+  </section>
+
+  <footer class="site-footer">
+    <img src="assets/footer.jpg" alt="Maasai cultural dancers in traditional beaded attire at Empiris Guest House">
+    <p class="footer-note">Empiris Guest House · Narok County, Kenya · Experience authentic Maasai hospitality · All prices in Kenyan Shillings (KES)</p>
+  </footer>
+
+<script>
+const startScreen = document.getElementById("start");
+const chatScreen = document.getElementById("chat");
+const startBtn = document.getElementById("startBtn");
+const backBtn = document.getElementById("backBtn");
+
+startBtn.addEventListener("click", () => {
+  startScreen.classList.add("hidden");
+  chatScreen.classList.remove("hidden");
+  input.focus();
+});
+
+backBtn.addEventListener("click", () => {
+  chatScreen.classList.add("hidden");
+  startScreen.classList.remove("hidden");
+  startScreen.classList.remove("fade-in");
+  void startScreen.offsetWidth;
+  startScreen.classList.add("fade-in");
+});
+
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("msg");
+const sendBtn = document.getElementById("send");
+const chips = document.getElementById("chips");
+
+const WELCOME = "Welcome to Empiris Guest House! I can book a room for you, check or cancel a " +
+                "booking, or answer questions about rates, check-in times, breakfast, parking, " +
+                "amenities and more.";
+const QUICK = ["Book a room", "Room rates", "Check-in times", "Breakfast", "Parking", "Check my booking"];
+
+function addMessage(text, who) {
+  const el = document.createElement("div");
+  el.className = "msg " + who;
+  el.textContent = text;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+
+function showTyping() {
+  const el = document.createElement("div");
+  el.className = "msg bot typing";
+  el.innerHTML = "<i></i><i></i><i></i>";
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+
+async function send(text) {
+  text = text.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  input.value = "";
+  sendBtn.disabled = true;
+  const typing = showTyping();
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    typing.remove();
+    addMessage(data.reply || data.error || "Something went wrong.", "bot");
+  } catch (err) {
+    typing.remove();
+    addMessage("Sorry, I can't reach the server right now. Please try again.", "bot");
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+function start() {
+  log.innerHTML = "";
+  addMessage(WELCOME, "bot");
+}
+
+QUICK.forEach(label => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = label;
+  b.onclick = () => send(label);
+  chips.appendChild(b);
+});
+
+form.addEventListener("submit", e => { e.preventDefault(); send(input.value); });
+
+document.getElementById("reset").addEventListener("click", async () => {
+  try { await fetch("/api/reset", { method: "POST" }); } catch (e) {}
+  start();
+});
+
+start();
+input.focus();
+</script>
+</body>
+</html>
