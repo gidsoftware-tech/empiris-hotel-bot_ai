@@ -289,6 +289,29 @@ def folio_details(guest_name, since_iso):
     }
 
 
+def stats_summary(since_iso):
+    """Aggregated stats for the dashboard."""
+    with LOCK:
+        bookings = _db.execute("SELECT COUNT(*) FROM bookings WHERE check_out>=?", (since_iso,)).fetchone()[0] or 0
+        charges = _db.execute("SELECT COALESCE(SUM(total_kes),0) FROM pos_charges WHERE created_at>=?", (since_iso,)).fetchone()[0] or 0
+        payments = _db.execute("SELECT COALESCE(SUM(amount_kes),0) FROM pos_payments WHERE created_at>=?", (since_iso,)).fetchone()[0] or 0
+    return {
+        "total_bookings": int(bookings),
+        "todays_charges": int(charges),
+        "paid_today": int(payments),
+        "outstanding": int(charges) - int(payments),
+    }
+
+
+def distinct_guests_with_charges(since_iso):
+    """Guest names that have charges on/after since_iso."""
+    with LOCK:
+        rows = _db.execute(
+            "SELECT DISTINCT guest_name FROM pos_charges WHERE created_at>=? ORDER BY guest_name",
+            (since_iso,)).fetchall()
+    return [r[0] for r in rows]
+
+
 # ---------- Users (login) ----------
 def find_user(username):
     with LOCK:

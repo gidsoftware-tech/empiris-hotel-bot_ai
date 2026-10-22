@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Empiris Guest House{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>Dashboard</h1>
+    <div class="actions">
+      <a href="{{ url_for('pos') }}" class="btn btn-outline">New Charge</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="label">Total Bookings</div>
+      <div class="value">{{ stats.total_bookings }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Today's Charges</div>
+      <div class="value">KES {{ stats.todays_charges|default(0) }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Outstanding</div>
+      <div class="value" style="color: var(--danger);">KES {{ stats.outstanding|default(0) }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Paid Today</div>
+      <div class="value" style="color: var(--success);">KES {{ stats.paid_today|default(0) }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Quick Actions</h2>
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+      <a href="{{ url_for('bookings') }}" class="btn btn-primary" style="width:100%;justify-content:center;">View All Bookings</a>
+      <a href="{{ url_for('pos') }}" class="btn btn-primary" style="width:100%;justify-content:center;">POS / Manage Folio</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recent Bookings</h2>
+    {% if recent_bookings %}
+    <table>
+      <thead>
+        <tr>
+          <th>Guest</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in recent_bookings %}
+        <tr>
+          <td>{{ b.name }}</td>
+          <td>{{ b.room.title() }}</td>
+          <td>{{ b.check_in }}</td>
+          <td>{{ b.check_out }}</td>
+          <td>KES {{ b.total }}</td>
+          <td><span class="badge badge-pending">Active</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p style="color: var(--muted);">No recent bookings.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Outstanding Folios</h2>
+    {% if outstanding_folios %}
+    <table>
+      <thead>
+        <tr>
+          <th>Guest</th><th>Charges</th><th>Paid</th><th>Outstanding</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in outstanding_folios %}
+        <tr>
+          <td>{{ f.guest_name }}</td>
+          <td>KES {{ f.folio_total }}</td>
+          <td>KES {{ f.paid_total }}</td>
+          <td><span class="badge badge-unpaid">KES {{ f.outstanding }}</span></td>
+          <td><a href="{{ url_for('folio', guest=f.guest_name) }}" class="btn btn-sm btn-outline">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p style="color: var(--muted);">No outstanding folios.</p>
+    {% endif %}
+  </div>
+{% endblock %}

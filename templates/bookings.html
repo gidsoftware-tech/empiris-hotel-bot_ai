@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Bookings · Empiris Guest House{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>All Bookings</h1>
+    <div class="actions">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+  </div>
+
+  <div class="card">
+    {% if bookings %}
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Guest</th><th>Room</th><th>Guests</th><th>Check-in</th><th>Check-out</th><th>Nights</th><th>Rate/Night</th><th>Total</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr>
+          <td>#{{ b.id }}</td>
+          <td>{{ b.name }}</td>
+          <td>{{ b.room.title() }}</td>
+          <td>{{ b.guests }}</td>
+          <td>{{ b.check_in }}</td>
+          <td>{{ b.check_out }}</td>
+          <td>{{ b.nights }}</td>
+          <td>KES {{ b.rate }}</td>
+          <td>KES {{ b.total }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('cancel_booking', booking_id=b.id) }}" onsubmit="return confirm('Cancel booking #{{ b.id }} for {{ b.name }}?');" style="display:inline;">
+              <button class="btn btn-danger btn-sm" type="submit">Cancel</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p style="color: var(--muted);">No upcoming bookings.</p>
+    {% endif %}
+  </div>
+{% endblock %}

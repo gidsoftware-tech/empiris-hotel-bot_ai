@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Folio: {{ guest }} · Empiris Guest House{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>Folio: {{ guest }}</h1>
+    <div class="actions">
+      <a href="{{ url_for('pos') }}" class="btn btn-outline">← Back to POS</a>
+      <a href="{{ url_for('pos') }}" class="btn btn-outline">New Charge</a>
+    </div>
+  </div>
+
+  {% if folio.outstanding > 0 %}
+  <div class="card">
+    <h2>Outstanding Balance</h2>
+    <div style="font-size:2rem;font-weight:700;color:var(--danger);margin-bottom:16px;">KES {{ folio.outstanding }}</div>
+    <form method="POST" action="{{ url_for('record_payment') }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Guest Name</label>
+          <input type="text" name="guest_name" value="{{ guest }}" readonly>
+        </div>
+        <div class="form-group">
+          <label>Amount (KES)</label>
+          <input type="number" name="amount" value="{{ folio.outstanding }}" min="1" max="{{ folio.outstanding }}" required>
+        </div>
+        <div class="form-group">
+          <label>Method</label>
+          <select name="method" required>
+            <option value="Cash">Cash</option>
+            <option value="M-Pesa">M-Pesa</option>
+            <option value="Card">Card</option>
+          </select>
+        </div>
+        <div class="form-group" style="align-self:end;">
+          <button class="btn btn-success" type="submit">Record Payment</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Charges table -->
+  <div class="card">
+    <h2>Charges</h2>
+    {% if folio.charges %}
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for c in folio.charges %}
+        <tr>
+          <td>{{ c.item_name }}</td>
+          <td>KES {{ c.price_kes }}</td>
+          <td>{{ c.qty }}</td>
+          <td>KES {{ c.total_kes }}</td>
+          <td>{{ c.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p style="color: var(--muted);">No charges.</p>
+    {% endif %}
+  </div>
+
+  <!-- Payments table -->
+  <div class="card">
+    <h2>Payments</h2>
+    {% if folio.payments %}
+    <table>
+      <thead>
+        <tr><th>Receipt #</th><th>Amount</th><th>Method</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for p in folio.payments %}
+        <tr>
+          <td>{{ p.receipt_no }}</td>
+          <td>KES {{ p.amount_kes }}</td>
+          <td>{{ p.method }}</td>
+          <td>{{ p.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p style="color: var(--muted);">No payments recorded.</p>
+    {% endif %}
+  </div>
+
+  <!-- Receipt preview -->
+  <div class="card">
+    <h2>Receipt Preview</h2>
+    <div class="receipt">
+      <div class="center">
+        <h3>EMPIRIS GUEST HOUSE</h3>
+        <div>Narok County, Kenya</div>
+        <div>Folio: {{ guest }}</div>
+      </div>
+      <div class="line"></div>
+      <div class="row"><span>Charges Total:</span><span>KES {{ folio.folio_total }}</span></div>
+      <div class="row"><span>Paid:</span><span>KES {{ folio.paid_total }}</span></div>
+      <div class="row"><span>Outstanding:</span><span>KES {{ folio.outstanding }}</span></div>
+      <div class="line"></div>
+      {% if folio.payments %}
+        {% for p in folio.payments %}
+        <div class="row"><span>{{ p.receipt_no }} ({{ p.method }}):</span><span>KES {{ p.amount_kes }}</span></div>
+        {% endfor %}
+      {% endif %}
+      <div class="total">
+        <span>Balance Due:</span><span>KES {{ folio.outstanding }}</span>
+      </div>
+    </div>
+    {% if folio.outstanding > 0 %}
+    <p style="text-align:center;margin-top:12px;"><a href="#" onclick="window.print();" class="btn btn-outline btn-sm">Print Receipt</a></p>
+    {% endif %}
+  </div>
+{% endblock %}
